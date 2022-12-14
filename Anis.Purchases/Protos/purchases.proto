@@ -1,0 +1,203 @@
+syntax = "proto3";
+
+
+package anis.purchases.v1;
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Anis.Purchases.InvoicesProto.V1";
+
+service Invoices {
+  rpc Create (CreateRequest) returns (Response); // Idempotent
+  rpc UpdateInfo (UpdateInfoRequest) returns (Response); // Not closed
+  rpc ChangeDeadline (ChangeDeadlineRequest) returns (Response); // Not delivered
+  rpc AddItem (AddItemRequest) returns (Response); // Not confirmed
+  rpc UpdateItem (UpdateItemRequest) returns (Response); // Not confirmed
+  rpc RemoveItem (RemoveItemRequest) returns (Response); // Not confirmed
+  rpc AdjustDamagedQuantity (AdjustDamagedQuantityRequest) returns (Response); // Not closed
+  rpc AddShipment (AddShipmentRequest) returns (Response); // Not confirmed
+  rpc UpdateShipment (UpdateShipmentRequest) returns (Response);// Not confirmed
+  rpc RemoveShipment (RemoveShipmentRequest) returns (Response);// Not confirmed
+  rpc AssignSupplier (SupplierRequest) returns (Response); // Not assigned
+  rpc ChangeSupplier (SupplierRequest) returns (Response); // Not confirmed
+  rpc ConfirmShipping (ConfirmShippingRequest) returns (Response); // Not confirmed
+  rpc UnconfirmShipping (UnconfirmShippingRequest) returns (Response); // Not delivered or pending
+  rpc Deliver (DeliverRequest) returns (Response); // Not delivered or pending
+  rpc CancelDelivery (CancelDeliveryRequest) returns (Response); // Not closed
+  rpc Close (CloseRequest) returns (Response); // Not closed
+  rpc Delete (DeleteRequest) returns (DeleteResponse); // Not confirmed
+}
+
+message CreateRequest {
+	string user_id = 1;
+	string customer_id = 2;
+	string reference = 3;
+	google.protobuf.Timestamp deadline = 4;
+	string statement = 5;
+	google.protobuf.StringValue payment_note = 6;
+}
+
+message UpdateInfoRequest {
+	string id = 1;
+	string user_id = 2;
+	string statement = 3;
+	google.protobuf.StringValue payment_note = 4;
+}
+
+message ChangeDeadlineRequest {
+	string id = 1;
+	string user_id = 2;
+	google.protobuf.Timestamp deadline = 3;
+}
+
+message AddItemRequest {
+	string id = 1;
+	string user_id = 2;
+	string item_id = 3;
+	int32 quantity = 4;
+	double cost = 5;
+	google.protobuf.StringValue note = 6;
+	int32 damaged_quantity = 7;
+}
+
+message UpdateItemRequest {
+	string id = 1;
+	string user_id = 2;
+	string item_id = 3;
+	int32 quantity = 4;
+	double cost = 5;
+	google.protobuf.StringValue note = 6;
+}
+
+message RemoveItemRequest {
+	string id = 1;
+	string user_id = 2;
+	string item_id = 3;
+}
+
+message AdjustDamagedQuantityRequest {
+	string id = 1;
+	string user_id = 2;
+	string item_id = 3;
+	int32 damaged_quantity = 4;
+}
+
+message AddShipmentRequest {
+	string id = 1;
+	string user_id = 2;
+	ShippingType shipping_type = 3;
+	double cost = 4;
+	google.protobuf.StringValue note = 5;
+}
+
+message UpdateShipmentRequest {
+	string id = 1;
+	string user_id = 2;
+	string shipment_id = 3;
+	ShippingType shipping_type = 4;
+	double cost = 5;
+	google.protobuf.StringValue note = 6;
+}
+
+message RemoveShipmentRequest {
+	string id = 1;
+	string user_id = 2;
+	string shipment_id = 3;
+}
+
+message SupplierRequest {
+	string id = 1;
+	string user_id = 2;
+	string supplier_id = 3;
+}
+
+message ConfirmShippingRequest {
+	string id = 1;
+	string user_id = 2;
+}
+
+message UnconfirmShippingRequest {
+	string id = 1;
+	string user_id = 2;
+	google.protobuf.StringValue note = 3;
+}
+
+message DeliverRequest {
+	string id = 1;
+	string user_id = 2;
+	string delivery_note = 3;
+}
+
+message CancelDeliveryRequest {
+	string id = 1;
+	string user_id = 2;
+	google.protobuf.StringValue cancellation_note = 3;
+}
+
+message CloseRequest {
+	string id = 1;
+	string user_id = 2;
+}
+
+message DeleteRequest {
+	string id = 1;
+	string user_id = 2;
+}
+
+
+
+
+message Response {
+	string message = 1;
+	InvoiceOutput output = 2;
+}
+
+
+message InvoiceOutput {
+	string id = 1;
+	string customer_id = 2;
+	string reference = 3;
+	google.protobuf.Timestamp deadline = 4;
+	string statement = 5;
+	google.protobuf.StringValue payment_note = 6;
+	InvoiceState state = 7;
+	google.protobuf.StringValue supplier_id = 8;
+	google.protobuf.StringValue delivery_note = 9;
+	repeated ItemOutput items = 10;
+	repeated ShipmentOutput shipments = 11;
+}
+
+message ItemOutput {
+	string item_id = 1;
+	int32 quantity = 2;
+	double cost = 3;
+	google.protobuf.StringValue note = 4;
+	int32 damaged_quantity = 5;
+}
+
+message ShipmentOutput {
+	string shipment_id = 1;
+	ShippingType shipping_type = 2;
+	double cost = 3;
+	google.protobuf.StringValue note = 4;
+}
+
+message DeleteResponse {
+	string message = 1;
+}
+
+enum ShippingType {
+	NON = 0;
+	SEA = 1;
+	DOMESTIC = 2;
+	AIR = 3;
+}
+
+enum InvoiceState {
+	PENDING = 0;
+	SUPPLIER_ASSIGNED = 1;
+	SHIPPING_CONFIRMED = 2;
+	DELIVERED = 3;
+	CLOSED = 4;
+}
